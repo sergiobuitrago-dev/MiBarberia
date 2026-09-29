@@ -1,0 +1,122 @@
+{
+  "findings": [
+    {
+      "category": "violation",
+      "file": "src/app/(owner)/page.tsx",
+      "line": 12,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/app/(owner)/visitas/nueva/page.tsx",
+      "line": 13,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/app/(owner)/visitas/nueva/page.tsx",
+      "line": 13,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 19,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 23,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 27,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 33,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 36,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 38,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/catalog/screens.tsx",
+      "line": 55,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/visits/detail.tsx",
+      "line": 25,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    },
+    {
+      "category": "violation",
+      "file": "src/features/visits/detail.tsx",
+      "line": 25,
+      "message": "Enabled literal button has no detectable action or submit behavior.",
+      "remediation": "Connect the button to a real action, make it a submit button, or disable/remove it.",
+      "ruleId": "affordance.actionless-button",
+      "severity": "error"
+    }
+  ],
+  "mode": "strict",
+  "projectRoot": "/Users/checho/Documents/Code/Proyectos/MiBarberia",
+  "schemaVersion": 1,
+  "summary": {
+    "errors": 12,
+    "total": 12,
+    "unresolved": 0,
+    "violations": 12,
+    "warnings": 0
+  }
+}
