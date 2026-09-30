@@ -167,3 +167,12 @@ test('manual provisioning rejects an existing OWNER without creating another sho
   await db.query('rollback to savepoint provisioning');
   assert.equal((await db.query('select * from public.barbershops')).rowCount, previousCount);
 });
+
+test('manual provisioning refuses the untouched template without writing data', async () => {
+  const sql = readFileSync('supabase/manual/provision-owner.sql', 'utf8');
+  const before = (await db.query('select count(*) from public.barbershops')).rows[0].count;
+  await db.query('savepoint empty_provisioning');
+  await assert.rejects(db.query(sql), /Introduce valores explícitos/);
+  await db.query('rollback to savepoint empty_provisioning');
+  assert.equal((await db.query('select count(*) from public.barbershops')).rows[0].count, before);
+});

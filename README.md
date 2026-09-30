@@ -1,12 +1,24 @@
-# MiBarbería — Fase 1
+# MiBarbería
 
-Cimentación del MVP: Next.js 16/App Router, TypeScript strict, Tailwind 4,
-shadcn/ui y Supabase Auth/PostgreSQL/RLS. Solo login, página OWNER protegida
-y acceso denegado. No hay dashboard ni funciones de las fases siguientes.
+Aplicación mobile-first para propietarios: Dashboard, registro/historial/anulación
+de visitas, Clientes y configuración de Barberos/Servicios. Next.js App Router,
+TypeScript y Supabase Auth/PostgreSQL con aislamiento por barbería mediante RLS.
+Acceso OWNER provisionado manualmente; sin registro público ni acceso operativo BARBER.
+
+## Dos entornos separados
+
+| Entorno | Aplicación | Base/Auth | Datos |
+|---|---|---|---|
+| Desarrollo | localhost | Supabase local | Ficticios y tests |
+| Piloto privado (por preparar) | Vercel, HTTPS | Supabase Cloud dedicado | Reales, 1–3 barberías |
+
+El desarrollo cotidiano nunca se conecta a la base del piloto. No copiar bases,
+usuarios, clientes ni visitas locales al remoto. El remoto se reconstruye desde
+las migraciones, seguido del provisionamiento explícito de cada barbería.
 
 ## Arranque local
 
-Requisitos: Node.js 22 o superior, npm y Docker Desktop en ejecución.
+Node.js 22 o superior, npm y Docker Desktop en ejecución:
 
 ```sh
 npm ci
@@ -15,94 +27,70 @@ npm run setup:local
 npm run dev
 ```
 
-Aplicación: http://localhost:3000. Studio local: http://127.0.0.1:54323.
-`setup:local` obtiene las claves exclusivamente del stack local. Crea `.env.local`
-solo si no existe y genera `.env.test.local` para las pruebas; ambos están ignorados.
-No sobrescribe una conexión remota que ya tengas configurada.
+App: http://localhost:3000. Studio: http://127.0.0.1:54323.
+`setup:local` obtiene claves del stack local, crea `.env.local` solo si no existe
+y genera `.env.test.local`. Ambos archivos están ignorados por Git. Si `.env.local`
+ya existe, comprueba que siga apuntando a localhost; el script no lo sobrescribe.
+Para probar una build optimizada: detener `dev`, ejecutar `npm run build` y
+`npm run start`. No ejecutar ambos servidores sobre el mismo puerto.
 
-Sin variables, la app sigue arrancando: `/` redirige a `/login`, que informa que el
-acceso aún no está configurado. No hay un modo demo que salte autenticación.
+## Variables
 
-Para iniciar sesión, crea un usuario y una barbería con los pasos de
-[provisionamiento](docs/provisioning.md). Las cuentas E2E son temporales y se eliminan.
+| Nombre | Uso | Clasificación |
+|---|---|---|
+| NEXT_PUBLIC_SUPABASE_URL | Local en `.env.local`; remota en Vercel | Pública |
+| NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY | Clave del proyecto correspondiente | Pública |
+| TEST_DATABASE_URL | Solo tests PostgreSQL locales | Privada |
+| SUPABASE_TEST_SECRET_KEY | Solo fixtures Auth/E2E locales | Secreta |
 
-## Variables de la aplicación
+La app desplegada requiere únicamente las dos variables `NEXT_PUBLIC_`.
+El servidor usa la sesión del usuario y sigue sujeto a RLS. No configurar
+service_role, claves administrativas ni contraseña PostgreSQL en Vercel.
+No guardar valores reales en documentación, código ni logs.
 
-En `.env.local` y posteriormente en Vercel:
+## Migraciones: fuente de verdad
 
-```dotenv
-NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
-```
+Las seis migraciones versionadas, en orden:
 
-No se necesita `service_role`, clave secreta ni contraseña de PostgreSQL en la app.
-El cliente del servidor también usa la clave pública y la sesión del usuario, por
-lo que está sujeto a RLS. Las claves antiguas `anon` no son el formato configurado
-en esta fase; usar la publishable key del diálogo Connect/API Keys.
+1. `20260929032903_initial_schema.sql`: ocho tablas, constraints, índices y RLS.
+2. `20260929033048_owner_rls.sql`: autorización OWNER, políticas y grants.
+3. `20260929042922_create_visit.sql`: registro transaccional y snapshots.
+4. `20260929132618_void_visit.sql`: anulación definitiva, sin borrado/restauración.
+5. `20260929140110_dashboard.sql`: agregados de visitas ACTIVE.
+6. `20260929194532_phase5_customers.sql`: vista customer_activity y búsqueda.
 
-Variables exclusivas de pruebas locales, generadas por `setup:local`:
+No insertan datos demo al aplicarse; los INSERT dentro de las RPCs solo se ejecutan
+al invocar esas operaciones. Seed desactivado. `supabase/manual` y `supabase/snippets`
+no forman parte del deployment de migraciones.
 
-- `SUPABASE_TEST_SECRET_KEY`: provisión/limpieza de usuarios temporales E2E.
-- `TEST_DATABASE_URL`: PostgreSQL local (por defecto puerto 54322).
-
-Estas variables no se configuran en Vercel ni se envían al navegador. Los tests
-rechazan URLs remotas para no escribir fixtures en una barbería real.
-
-## Migraciones
-
-1. `20260929032903_initial_schema.sql`: ocho tablas, constraints, claves compuestas,
-   índices, timestamps y RLS habilitado sin acceso público.
-2. `20260929033048_owner_rls.sql`: autorización OWNER, políticas y grants mínimos.
-
-Son la fuente de verdad y se aplican en orden. Las tablas de visitas no aceptan
-escrituras por la API en Fase 1. Las funciones transaccionales de VISIT se crearán
-en Fase 3; el CRUD simple usa directamente Supabase y RLS.
+`npm run db:reset` **borra la base local**: no usar para desplegar ni verificar un
+entorno con datos que se deban conservar. Para inspección sin borrado:
 
 ```sh
-# Borra SOLO los datos del Supabase LOCAL y reconstruye desde migraciones.
-npm run db:reset
-npm run db:types
+npx supabase migration list --local
+npx supabase db diff --local --schema public,private
 ```
 
-No uses `db:reset` en un entorno con datos que quieras conservar. Nunca se ejecuta
-automáticamente al iniciar la aplicación.
-
-## Comprobaciones
-
-Con Supabase local iniciado:
+## Verificación local
 
 ```sh
 npm run lint
 npm run typecheck
 npm test
-npx playwright install chromium
 npm run test:e2e
-npm run build
-npx supabase db advisors --local --type all --level warn --fail-on error
 ```
 
-`npm test` ejecuta operaciones reales como `authenticated`, con fixtures en
-transacciones revertidas, sobre PostgreSQL local. No simula RLS.
-`test:e2e` compila y levanta Next.js en modo producción en el puerto 3100, usa Auth real y elimina solo sus
-cuentas/barberías temporales. Sus claves locales se cargan de `.env.test.local`.
+Playwright necesita Chromium instalado (`npx playwright install chromium`).
+E2E compila y levanta la app en 3100; crea y limpia exclusivamente sus fixtures.
+Los tests de base de datos usan transacciones revertidas. Ambas suites rechazan
+hosts remotos: no eliminar esas protecciones ni usar túneles al piloto para saltarlas.
+No ejecutar estas suites contra datos reales.
 
-## Seguridad y decisiones
+## Piloto y provisión
 
-- Sesiones SSR por cookies y refresco con `src/proxy.ts` (Next.js 16).
-- La página protegida valida identidad con Auth y consulta membresía OWNER en DB.
-- RLS no confía en `user_metadata`, parámetros del navegador o filtros de la UI.
-- Membresías solo administradas manualmente; un OWNER no puede asignarse permisos.
-- Tablas de negocio aisladas por `barbershop_id`; relaciones cross-tenant impedidas
-  también por claves foráneas compuestas.
-- CRUD simple con SELECT/INSERT/UPDATE según tabla y columnas permitidas, sin RPC.
-- Sin permisos DELETE para usuarios de aplicación. Catálogos se desactivarán.
-- `visits` y `visit_items`: SELECT únicamente; no CRUD parcial inseguro.
-- Las páginas privadas son dinámicas y las respuestas no se almacenan en caché.
-- El helper privado `owned_barbershop_ids` usa SECURITY DEFINER únicamente para
-  consultar membresías sin recursión RLS. No acepta user_id ni es una RPC pública.
-- Cuentas sin OWNER y rol BARBER ven acceso no habilitado.
-- Si un usuario tiene varias membresías OWNER, esta página mínima muestra la
-  primera por fecha/id. No se implementó selector de barberías.
+Seguir [deployment del piloto](docs/pilot-deployment.md) y
+[provisionamiento manual](docs/provisioning.md). Preparación documental únicamente:
+la existencia de estas guías no significa que el piloto esté desplegado/verificado.
 
-Ver [decisiones y alcance](docs/phase-1-plan.md), [provisión](docs/provisioning.md)
-y [evidencia de verificación](docs/phase-1-verification.md).
+Las notas `docs/phase-*` son evidencia histórica de cada fase, no instrucciones
+actuales de despliegue. No se agrega onboarding, billing ni infraestructura adicional.

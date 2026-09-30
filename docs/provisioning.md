@@ -1,104 +1,52 @@
-# Primera barbería y OWNER
+# Provisionamiento manual de barbería y OWNER
 
-## A. Preparar un proyecto remoto gratuito
+Para despliegue y configuración remota, seguir [pilot-deployment.md](pilot-deployment.md).
+Hay seis migraciones; aplicarlas todas antes de provisionar. Desarrollo usa Supabase
+local; piloto usa su proyecto Cloud. Nunca cambiar `.env.local` para administrar el piloto.
 
-Usar un proyecto dedicado al piloto, en una organización Free. Todas las barberías
-comparten ese proyecto y se aíslan mediante RLS; no hace falta un proyecto por local.
+## 1. Confirmar destino y datos
 
-1. Crear el proyecto en Supabase y guardar la contraseña de base de datos en tu
-   gestor de contraseñas. No pegarla en código ni en el chat.
-2. En Authentication, desactivar **Allow new users to sign up** y acceso anónimo.
-3. Mantener **Email** habilitado como proveedor de autenticación. Desactivar el
-   registro NO significa desactivar el proveedor Email.
-4. En URL Configuration, establecer Site URL en `http://localhost:3000` durante
-   desarrollo; cambiarlo al dominio de Vercel cuando exista despliegue.
-5. Mantener el esquema `public` accesible por Data API. NO exponer `private`.
-6. En Connect/API Keys, copiar Project URL y **publishable key** a `.env.local`.
+En Studio local o en el dashboard Cloud, comprobar explícitamente el proyecto.
+Preparar correo del propietario y nombre de barbería. No reutilizar datos de desarrollo.
+Para piloto: registro público y acceso anónimo desactivados, proveedor Email habilitado.
 
-El archivo `supabase/config.toml` controla el stack LOCAL. No configura
-automáticamente estos ajustes del proyecto hospedado.
+## 2. Crear usuario Auth
 
-## B. Aplicar las migraciones
+En Authentication → Users → Add user → Create new user, introducir correo y una
+contraseña segura (mínimo 12 caracteres) y confirmar el correo mediante la opción
+administrativa Auto Confirm User. No usar invitación por email: no configuramos correo
+transaccional en este piloto. No escribir passwords en SQL, repositorio, chat o logs.
+No asignar permisos mediante user_metadata. Entregar credenciales por un canal privado.
 
-Desde la raíz del repositorio:
+## 3. Vincular OWNER atómicamente
 
-```sh
-npm ci
-npx supabase login
-npx supabase link --project-ref TU_PROJECT_REF
-npx supabase db push --linked --dry-run
-npx supabase db push --linked
-npx supabase migration list --linked
-```
+Abrir `supabase/manual/provision-owner.sql`. La plantilla versionada tiene ambos
+valores vacíos y falla sin cambios si se ejecuta así. En una copia NO versionada o en
+SQL Editor, rellenar solamente `v_owner_email` y `v_shop_name`. Si hay apóstrofos,
+escaparlos como `''` en los literales SQL. Revisar proyecto y valores antes de ejecutar.
+No guardar esa copia rellenada en Git ni guardar passwords en ella.
 
-`TU_PROJECT_REF` es el identificador del proyecto, visible en su URL del dashboard.
-La CLI pedirá la autenticación/contraseña necesaria; no la añadas a comandos que
-queden en el historial. Verifica que sea el proyecto del piloto antes de aplicar.
+El script rechaza vacíos, marcadores comunes y formato de correo inválido; exige
+un Auth user existente y confirmado. Crea barbería (COP/America/Bogota) y membership
+OWNER en una sola transacción. Rechaza un usuario que ya tenga OWNER, sin duplicar
+barberías. No crea clientes, visitas, barberos, servicios ni reglas de fidelización.
+Los controles no sustituyen revisar que los datos introducidos sean los reales.
 
-Deben aparecer estas dos versiones aplicadas:
+## 4. Configurar la operación
 
-- `20260929032903_initial_schema.sql`
-- `20260929033048_owner_rls.sql`
+Entrar como OWNER en la URL del entorno elegido. En Más → Barberos y Más → Servicios,
+crear nombres, comisiones y precios acordados con el propietario. No inventar catálogos.
+Si corresponde configuración de fidelización, provisionarla administrativamente en
+`loyalty_programs`, con el barbershop_id recién creado y valores acordados. No hay que
+crear una regla ficticia para iniciar ni implementar una nueva pantalla en esta tarea.
 
-Alternativa si usas solamente SQL Editor: ejecutar ambos archivos completos y en
-ese orden como administrador. Esto crea el schema, pero NO registra su historial
-en la CLI; no mezclar después `db push` sin reconciliar ese historial. Se recomienda
-usar la CLI o el plugin con migraciones registradas.
+## 5. Comprobar
 
-## C. Crear el usuario
+- El OWNER ve el nombre correcto de barbería.
+- Barberos/Servicios muestran únicamente lo configurado para ella.
+- Clientes e historial están vacíos; Dashboard sin visitas.
+- Confirmar cero filas de customers, visits y visit_items para esa barbería.
+- Logout y nueva entrada funcionan. No crear una visita de prueba en la barbería real.
 
-1. Abrir **Authentication → Users → Add user → Create new user**.
-2. Introducir el correo real del propietario y una contraseña segura (al menos
-   12 caracteres recomendados). El propietario necesitará esas credenciales.
-3. Marcar **Auto Confirm User** / confirmar el correo, porque el piloto usa
-   provisionamiento manual y no necesita envío de correo para el primer acceso.
-4. No añadir roles a `user_metadata`: los permisos se asignan en la tabla de
-   membresías, no en metadata editable por el usuario.
-
-Estos pasos también funcionan en Studio local: http://127.0.0.1:54323.
-Crear usuarios por la vía administrativa sigue permitido con el registro público
-desactivado. No insertar contraseñas ni usuarios de producción directamente en SQL.
-
-## D. Crear la barbería y vincular OWNER
-
-1. Abrir `supabase/manual/provision-owner.sql`.
-2. Reemplazar `CAMBIAR_CORREO_OWNER` por el correo del usuario creado.
-3. Reemplazar `CAMBIAR_NOMBRE_BARBERIA` por el nombre real de la barbería.
-4. Pegar y ejecutar el bloque completo en **SQL Editor** como administrador.
-
-El bloque comprueba que el usuario exista y tenga correo confirmado; crea la
-barbería con COP/America/Bogota y su membresía OWNER atómicamente. Si falla, no deja
-una barbería a medias. Si el usuario ya tiene una membresía OWNER, aborta para
-evitar duplicar la barbería al repetir el script. No crea barberos, servicios,
-clientes ni datos ficticios de ventas.
-
-Verificar como administrador:
-
-```sql
-select s.id, s.name, s.currency_code, s.timezone, u.email, m.role
-from public.barbershops s
-join public.barbershop_users m on m.barbershop_id = s.id
-join auth.users u on u.id = m.user_id
-where u.email = 'CORREO_REAL_DEL_OWNER';
-```
-
-## E. Comprobar acceso
-
-```sh
-npm run dev
-```
-
-Abrir http://localhost:3000 e ingresar las credenciales. Deben aparecer el nombre
-de la barbería, correo de la cuenta y “Acceso de propietario verificado”. Cerrar
-sesión y abrir `/` de nuevo: debe redirigir al login.
-
-Para otra barbería, repetir C y D con otro OWNER. No crear membresías BARBER todavía.
-No hay pantalla de administración de usuarios ni registro público.
-
-## Alcance verificado
-
-La implementación y las pruebas usan Supabase LOCAL. Ningún proyecto remoto fue
-creado ni modificado desde esta sesión. El plugin figuraba instalado, pero no
-exponía herramientas Supabase; el permiso de acceso al dashboard por navegador
-fue rechazado. Cuando la conexión del plugin esté disponible podrá aplicarse este
-mismo esquema al proyecto real, sin pedir contraseñas administrativas en el chat.
+Para 1–3 barberías, repetir con cada propietario y su correo. Mantener un OWNER con
+una barbería en este piloto: no hay selector de barberías. No crear membresías BARBER.
