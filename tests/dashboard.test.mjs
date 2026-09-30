@@ -72,3 +72,25 @@ test('local calendar boundaries for today, Monday week, month and inclusive cust
     await db.query('savepoint bad_period');await assert.rejects(dashboard(...args),{code:'22023'});await db.query('rollback to savepoint bad_period');
   }
 });
+test('multiple barbers and payments remain separate; top five services merge renamed snapshots', async () => {
+  const secondBarber=(await db.query("insert into public.barbers(barbershop_id,name,commission_rate) values($1,'Andrés',50) returning id",[f.a.shop])).rows[0].id;
+  const services=[];
+  for(let i=0;i<6;i++) services.push((await db.query("insert into public.services(barbershop_id,name,base_price) values($1,$2,1000) returning id",[f.a.shop,`Servicio ${i}`])).rows[0].id);
+  await asUser(db,f.users.a);
+  for(const payment of ['TRANSFER','CARD','OTHER']) await db.query('select public.create_visit($1,$2,0,$3)',[secondBarber,JSON.stringify(services.map(id=>({service_id:id,charged_price:1000}))),payment]);
+  const data=await dashboard();
+  assert.deepEqual(data.totals,{sales:'48000',visits:'4',commissions:'21000',shop:'27000'});
+  assert.deepEqual(data.payments.map(p=>[p.method,p.amount]),[['CASH','30000'],['TRANSFER','6000'],['CARD','6000'],['OTHER','6000']]);
+  assert.deepEqual(data.barbers.map(b=>[b.name,b.visits,b.production,b.commission]),[['Carlos','1','30000','12000'],['Andrés','3','18000','9000']]);
+  assert.equal(data.services.length,5);
+  assert.ok(data.services.every(s=>s.quantity==='3'));
+  assert.deepEqual(data.services.map(s=>s.id),services.sort().slice(0,5));
+});
+test('aggregate COP amounts remain exact above the JavaScript safe integer limit', async () => {
+  await asUser(db,f.users.a);
+  for(let i=0;i<2;i++) await db.query("select public.create_visit($1,$2,0,'CASH')",[f.a.barber,JSON.stringify([{service_id:f.a.service,charged_price:'9007199254740991'}])]);
+  const data=await dashboard();
+  assert.equal(data.totals.sales,'18014398509511982');
+  assert.equal(data.payments[0].amount,'18014398509511982');
+  assert.equal(data.barbers[0].production,'18014398509511982');
+});

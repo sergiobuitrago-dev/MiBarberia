@@ -165,6 +165,12 @@ isOneToOne: false
       foreignKeyName: "visits_barbershop_id_customer_id_fkey"
       columns: ["barbershop_id","customer_id"]
 isOneToOne: false
+      referencedRelation: "customer_activity"
+      referencedColumns: ["barbershop_id","id"]
+    },{
+      foreignKeyName: "visits_barbershop_id_customer_id_fkey"
+      columns: ["barbershop_id","customer_id"]
+isOneToOne: false
       referencedRelation: "customers"
       referencedColumns: ["barbershop_id","id"]
     },{
@@ -178,7 +184,20 @@ isOneToOne: false
                 }
           }
           Views: {
-            [_ in never]: never
+            "customer_activity": {
+                  Row: {
+                    "barbershop_id": string | null,"id": string | null,"last_visit": string | null,"name": string | null,"phone": string | null,"total_spent": string | null,"total_visits": string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "customers_barbershop_id_fkey"
+      columns: ["barbershop_id"]
+isOneToOne: false
+      referencedRelation: "barbershops"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
             "create_visit":
@@ -186,6 +205,9 @@ isOneToOne: false
                            },
 "get_dashboard":
 { Args: { "p_end_date"?: string,"p_period"?: string,"p_start_date"?: string }; Returns: Json
+                           },
+"search_customers":
+{ Args: { "p_page"?: number,"p_query"?: string }; Returns: Json
                            },
 "void_visit":
 { Args: { "p_visit_id": string }; Returns: string

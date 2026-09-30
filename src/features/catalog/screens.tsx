@@ -18,10 +18,10 @@ export async function CatalogList({ kind, searchParams }: { kind: CatalogKind; s
   return <>
     <Button asChild variant="ghost" className="-ml-4 mb-4"><Link href="/mas">← Más</Link></Button>
     <div className="mb-6"><p className="eyebrow">Configuración</p><h1 className="page-title">{config.title}</h1><p className="mt-2 text-muted-foreground">{config.description}</p></div>
-    {message && <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">{message}</p>}
+    {message && <p role="status" className="mb-5 rounded-xl bg-success/10 p-4 text-sm text-success">{message}</p>}
     {data?.length ? <>
       <Button asChild className="mb-5 w-full"><Link href={`${config.path}/nuevo`}>+ Agregar {config.singular}</Link></Button>
-      <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
+      <ul className="divide-y overflow-hidden rounded-2xl bg-card">
         {data.map(item => <li key={item.id} className="flex items-center gap-3 p-4 sm:p-5">
           <div className="min-w-0 flex-1"><h2 className="break-words font-semibold">{item.name}</h2><p className="mt-1 text-sm text-muted-foreground tabular-nums">{'commission_rate' in item ? `${new Intl.NumberFormat('es-CO').format(item.commission_rate)}% comisión` : formatCOP(item.base_price)}</p></div>
           <Button asChild variant="outline"><Link aria-label={`Editar ${item.name}`} href={`${config.path}/${item.id}/editar`}>Editar</Link></Button>

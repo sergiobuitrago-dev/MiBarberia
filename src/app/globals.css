@@ -1,24 +1,29 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --primary: #0f172a;
-  --primary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #475569;
-  --border: #cbd5e1;
-  --input: #cbd5e1;
-  --ring: #334155;
-  --destructive: #b91c1c;
+  color-scheme: dark;
+  --background: #0B0C0E;
+  --foreground: #F5F2EA;
+  --card: #131519;
+  --surface-elevated: #1C1F24;
+  --primary: #C9A66B;
+  --primary-foreground: #111216;
+  --muted: var(--surface-elevated);
+  --muted-foreground: #A5A6AD;
+  --border: #343840;
+  --input: #747982;
+  --ring: var(--primary);
+  --success: #83C59B;
+  --destructive: #F08D88;
   --radius: 0.625rem;
-  --scrollbar-thumb: #94a3b8;
-  --scrollbar-track: #f8fafc;
+  --scrollbar-thumb: #747982;
+  --scrollbar-track: var(--background);
 }
 
 @theme inline {
   --font-sans: Arial, Helvetica, sans-serif;
+  --color-surface-elevated: var(--surface-elevated);
+  --color-success: var(--success);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -60,7 +65,7 @@
 
 @layer components {
   .eyebrow { @apply mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground; }
-  .page-title { @apply text-3xl font-bold tracking-tight; }
+  .page-title { @apply text-3xl font-extrabold tracking-tight leading-tight; }
 }
 
 @layer components {
@@ -68,4 +73,12 @@
   .visit-heading { @apply mb-3 text-lg font-semibold; }
   .field-label { @apply mb-2 block text-sm font-medium; }
   .field-error { @apply mt-2 text-sm text-destructive; }
+}
+
+@layer components {
+  .brand { @apply text-xl font-extrabold tracking-tight text-foreground; }
+  .selection { @apply border-primary/70 bg-primary/10 text-primary; }
+  .navigation-item { @apply flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2; }
+  .navigation-item[aria-current="page"] { @apply bg-primary/10 text-primary; }
+  .sales-amount { @apply mt-2 break-all text-[2.75rem] leading-tight font-extrabold tracking-tight tabular-nums; }
 }

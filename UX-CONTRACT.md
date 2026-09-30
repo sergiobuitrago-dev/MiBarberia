@@ -49,3 +49,38 @@ Reemplaza la exclusión de anulación de Fase 3. La edición continúa excluida 
 | Error/concurrencia | ConfirmAction + voidVisit | Error seguro con Actualizar detalle; RPC no distingue inexistente/ajena/anulada; dos intentos concurrentes solo producen un éxito | visit-history.spec.ts |
 
 Carga/error globales siguen cubriendo las rutas; detalle inaccesible muestra Visita no disponible sin revelar existencia ni tenant. La paginación es por offset como los catálogos; una inserción concurrente puede desplazar filas entre páginas. Volver a la primera página muestra lo más reciente. No hay snapshot de navegación entre páginas ni infinite scroll.
+
+## Fase 4
+Inicio sustituye la portada por Dashboard. Sin edición de visitas, Clientes/Fidelización ni otras fases.
+
+| Capacidad | Responsable | Comportamiento | Verificación |
+|---|---|---|---|
+| Dashboard | features/dashboard/screen.tsx | Una RPC por carga; métricas y listas de ACTIVE; ceros y listas vacías; Nueva visita prominente | dashboard.spec.ts |
+| Date | Input nativo type=date + dashboard/period.ts | Selector nativo aceptado; fechas ISO como días, validación calendario/rango server-side; GET restorable en URL; sin convertir periodos según navegador | dashboard-period.test.mjs |
+| Periodos | get_dashboard RPC | Hoy local completo; semana lunes/mes día1 hasta statement_timestamp; personalizado ambos días mediante límite superior exclusivo | dashboard.test.mjs |
+| Seguridad | get_dashboard + requireOwner | SECURITY INVOKER, RLS activa, OWNER y barbería/timezone derivados; ningún tenant del navegador | dashboard.test.mjs |
+| Exactitud | RPC + cop/BigInt | Importes/counts como strings decimales, snapshot commission_amount, agregación de visitas separada de items | dashboard.test.mjs |
+| Servicios | get_dashboard | Agrupa service_id; nombre actual incluso si está inactivo; fallback último snapshot del periodo; no escribe snapshots; cinco resultados con desempate estable | dashboard.test.mjs |
+| Refresh | visits/actions.ts | Revalidate de Inicio después de crear/anular; nueva consulta al regresar; sin realtime ni métricas almacenadas | dashboard.spec.ts |
+
+Loading/error globales siguen vigentes. Rango inválido conserva fechas y muestra error; no muestra cifras de otro periodo como si fueran el seleccionado. Al abrir Personalizado sin aplicar, la RPC de Hoy se utiliza únicamente para obtener la fecha local de los defaults, y no se presentan métricas hasta aplicar un rango válido. La validación exige fechas de años 0001 a 9999. Una actividad con total cero sigue contando como visita y mantiene su método/barbero/servicios.
+
+## Rediseño visual — septiembre de 2026
+Contrato funcional de fases anteriores sin cambios. Apariencia oscura única, tokens centralizados y Arial/Helvetica existente. Button incorpora selected para elecciones; Wordmark comparte Mi blanco/Barbería dorado; OwnerNavigation conserva las mismas rutas y aria-current. Jerarquía por superficies, con bordes en controles y separadores.
+
+Verificación: tests/e2e/visual-theme.spec.ts recorre ocho vistas a 360/390/430 px, espera el encabezado de cada ruta antes de capturar y comprueba ausencia de overflow horizontal. Los tests funcionales existentes siguen cubriendo autenticación, CRUD, registro, anulación y Dashboard.
+
+## Fase 5 — Clientes
+Esta fase habilita Clientes; Fidelización permanece excluida.
+
+| Capacidad | Responsable | Comportamiento | Verificación |
+|---|---|---|---|
+| Navegación | OwnerNavigation | Inicio/Visitas/Clientes/Más; ruta activa también en perfil/edición | customers.spec.ts |
+| Search | customers/search.tsx + search_customers | Buscar/Enter explícito, sin debounce necesario al no buscar por tecla; limpiar con foco; pendiente bloquea edición temporalmente; URL q/pagina; nombre literal sin case, teléfono por dígitos | customers.test.mjs + customers.spec.ts |
+| Métricas | customer_activity, vista security_invoker | COUNT de visitas ACTIVE, SUM total, MAX fecha; una visita cuenta una vez independientemente de servicios; sin persistencia; importes como strings exactos | customers.test.mjs |
+| Listas | customers/screens.tsx | 25 filas, última ACTIVE DESC NULLS LAST/name/id; sin ocasionales artificiales; estados vacíos y páginas fuera de rango | customers.spec.ts |
+| Perfil | customers/screens.tsx | Supabase server-side a vista y visitas; historial ACTIVE de 25 + 1 lookahead; fecha/id descendentes; datos de barbero y snapshots; métricas globales no dependen de página | customers.spec.ts |
+| Form / CRUD | customers/form.tsx + actions.ts | Button/Input canónicos; nombre obligatorio, teléfono opcional/no único; validación server-side, foco primer error, entradas conservadas, pending, Cancelar; UPDATE limitado a name/phone con tenant del servidor y RLS | customer-validation.test.mjs + customers.spec.ts |
+| Seguridad | requireOwner + RLS + filtros de tenant | Vista/RPC invoker; perfiles ajenos e inexistentes indistinguibles; sin nuevo permiso de escritura; zero-row update no es éxito | customers.test.mjs + customers.spec.ts |
+
+No cache persistente de Clientes: layout OWNER force-dynamic existente; consultas nuevas en navegación. Edición revalida Clientes y Visitas por el nombre actual compartido. Acciones/RPC existentes de registro/anulación permanecen intactas. Consultas de resumen e historial separadas: cambios concurrentes entre ambas pueden reflejar instantes distintos; no se promete snapshot transaccional ni realtime. Paginación offset comparte la limitación ya aceptada del historial: una nueva visita puede desplazar filas entre páginas.

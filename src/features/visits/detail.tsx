@@ -18,7 +18,7 @@ export async function VisitDetail({ id, success = false }: { id: string; success
   const registered = success && visit.status === 'ACTIVE';
   return <>
     <Button asChild variant="ghost" className="-ml-4 mb-4"><Link href="/visitas">← Visitas</Link></Button>
-    {registered && <div><span aria-hidden="true" className="mb-5 inline-flex size-12 items-center justify-center rounded-full bg-emerald-100 text-2xl text-emerald-800">✓</span></div>}
+    {registered && <div><span aria-hidden="true" className="mb-5 inline-flex size-12 items-center justify-center rounded-full bg-success/10 text-2xl text-success">✓</span></div>}
     <p className="eyebrow">{registered ? 'Todo listo' : 'Registro'}</p>
     <h1 className="page-title">{registered ? 'Visita registrada' : 'Detalle de visita'}</h1>
     <p className="mt-2 mb-5 text-sm text-muted-foreground"><VisitDate value={visit.visited_at} /></p>
@@ -26,7 +26,7 @@ export async function VisitDetail({ id, success = false }: { id: string; success
       <VisitStatus status={visit.status} />
       {visit.status === 'VOIDED' && <p className="mt-2 text-sm text-muted-foreground">Esta visita está anulada. Sus datos se conservan. Si necesitas corregirla, registra una nueva visita.</p>}
     </div>
-    <section className="rounded-2xl border bg-card p-5">
+    <section className="rounded-2xl bg-card p-5">
       <h2 className="break-words text-xl font-semibold">{visit.customers?.name ?? 'Cliente ocasional'}</h2>
       <p className="mt-2 break-words text-sm text-muted-foreground">{visit.barbers?.name} · {payments[visit.payment_method as Payment]}</p>
       <div className="mt-5 flex justify-between gap-3 border-t pt-4 text-xs text-muted-foreground"><span>Servicios</span><span>Precio cobrado</span></div>

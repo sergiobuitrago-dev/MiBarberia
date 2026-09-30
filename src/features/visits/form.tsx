@@ -37,7 +37,7 @@ export function VisitForm({ barbers, services }: { barbers:VisitBarber[]; servic
       <CustomerPicker draft={draft} setDraft={patch} errors={errors} />
       <section className="visit-section" aria-labelledby="barber-heading">
         <h2 id="barber-heading" className="visit-heading">¿Quién atendió?</h2>
-        <div className="flex flex-wrap gap-2">{barbers.map((barber,index) => <Button key={barber.id} type="button" variant={draft.barberId === barber.id ? 'default' : 'outline'} className="h-auto min-h-11 max-w-full py-3 whitespace-normal text-left" aria-pressed={draft.barberId === barber.id} data-invalid={index === 0 && !!errors.barber} aria-describedby={errors.barber ? 'barber-error' : undefined} onClick={() => patch({barberId:barber.id})}>{barber.name}</Button>)}</div>
+        <div className="flex flex-wrap gap-2">{barbers.map((barber,index) => <Button key={barber.id} type="button" variant={draft.barberId === barber.id ? 'selected' : 'outline'} className="h-auto min-h-11 max-w-full py-3 whitespace-normal text-left" aria-pressed={draft.barberId === barber.id} data-invalid={index === 0 && !!errors.barber} aria-describedby={errors.barber ? 'barber-error' : undefined} onClick={() => patch({barberId:barber.id})}>{barber.name}</Button>)}</div>
         {errors.barber && <p id="barber-error" className="field-error">{errors.barber}</p>}
       </section>
       <section className="visit-section" aria-labelledby="services-heading">
@@ -45,7 +45,7 @@ export function VisitForm({ barbers, services }: { barbers:VisitBarber[]; servic
         <div className="space-y-2">{services.map((service,index) => {
           const item = draft.items.find(item => item.service_id === service.id);
           const fieldError = errors[`price-${service.id}`];
-          return <div key={service.id} className={`overflow-hidden rounded-xl border ${item ? 'border-primary bg-muted' : 'bg-card'}`}>
+          return <div key={service.id} className={`overflow-hidden rounded-xl border ${item ? 'border-primary/70 bg-primary/10' : 'bg-card'}`}>
             <button type="button" aria-pressed={!!item} aria-label={`${service.name}, ${cop(service.base_price)}`} data-invalid={index === 0 && !!errors.items} aria-describedby={errors.items ? 'items-error' : undefined} onClick={() => toggle(service)} className="flex min-h-16 w-full items-center gap-3 p-4 text-left focus-visible:outline-2 focus-visible:outline-offset-[-3px]">
               <span aria-hidden="true" className={`flex size-5 shrink-0 items-center justify-center rounded border text-xs ${item ? 'border-primary bg-primary text-primary-foreground' : 'border-input'}`}>{item ? '✓' : '+'}</span>
               <span className="min-w-0 flex-1 break-words font-medium">{service.name}</span><span className="text-sm tabular-nums">{cop(service.base_price)}</span>
@@ -61,10 +61,10 @@ export function VisitForm({ barbers, services }: { barbers:VisitBarber[]; servic
       </section>
       <section className="visit-section" aria-labelledby="payment-heading">
         <h2 id="payment-heading" className="visit-heading">¿Cómo pagó?</h2>
-        <div className="grid grid-cols-2 gap-2">{Object.entries(payments).map(([key,label]) => <Button key={key} type="button" variant={draft.payment === key ? 'default' : 'outline'} aria-pressed={draft.payment === key} onClick={() => patch({payment:key as VisitDraft['payment']})}>{label}</Button>)}</div>
+        <div className="grid grid-cols-2 gap-2">{Object.entries(payments).map(([key,label]) => <Button key={key} type="button" variant={draft.payment === key ? 'selected' : 'outline'} aria-pressed={draft.payment === key} onClick={() => patch({payment:key as VisitDraft['payment']})}>{label}</Button>)}</div>
         {errors.payment && <p className="field-error">{errors.payment}</p>}
       </section>
-      <section aria-label="Resumen" className="rounded-2xl border bg-card p-5">
+      <section aria-label="Resumen" className="rounded-2xl bg-card p-5">
         <div className="flex justify-between gap-2 text-sm"><span>Subtotal</span><span className="tabular-nums" data-testid="subtotal">{cop(subtotal)}</span></div>
         <div className="mt-4 flex items-center justify-between gap-3"><label htmlFor="discount" className="text-sm">Descuento (COP)</label><Input id="discount" className="w-32 text-right tabular-nums" inputMode="numeric" value={draft.discount} onChange={e => patch({discount:e.target.value})} aria-invalid={!!errors.discount} aria-describedby={errors.discount ? 'discount-error' : undefined}/></div>
         {errors.discount && <p id="discount-error" className="field-error">{errors.discount}</p>}

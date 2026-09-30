@@ -39,7 +39,7 @@ export function ConfirmAction({ action, triggerLabel, title, description, cancel
   }
   return <section className="mt-8 border-t pt-6">
     {!confirm ? <Button ref={trigger} variant="destructive" onClick={() => setConfirm(true)}>{triggerLabel}</Button> :
-      <form action={submit} noValidate aria-label={title} aria-busy={pending} className="space-y-4 rounded-xl border bg-card p-4"
+      <form action={submit} noValidate aria-label={title} aria-busy={pending} className="space-y-4 rounded-xl bg-card p-4"
         onSubmit={event => { if (submitting.current) event.preventDefault(); else submitting.current = true; }}
         onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); dismiss(); } }}>
         <h2 className="break-words font-semibold">{title}</h2>

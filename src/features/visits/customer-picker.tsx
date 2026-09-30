@@ -25,7 +25,7 @@ export function CustomerPicker({ draft, setDraft, errors }: { draft: VisitDraft;
   return <section aria-labelledby="customer-heading" className="visit-section">
     <h2 id="customer-heading" className="visit-heading">Cliente</h2>
     <div className="flex flex-wrap gap-2">
-      {([['occasional','Ocasional'],['existing','Buscar cliente'],['new','+ Cliente nuevo']] as const).map(([mode,label]) => <Button key={mode} type="button" variant={draft.customerMode === mode ? 'default' : 'outline'} aria-pressed={draft.customerMode === mode} onClick={() => setDraft({customerMode:mode})}>{label}</Button>)}
+      {([['occasional','Ocasional'],['existing','Buscar cliente'],['new','+ Cliente nuevo']] as const).map(([mode,label]) => <Button key={mode} type="button" variant={draft.customerMode === mode ? 'selected' : 'outline'} aria-pressed={draft.customerMode === mode} onClick={() => setDraft({customerMode:mode})}>{label}</Button>)}
     </div>
     {draft.customerMode === 'occasional' && <p className="mt-3 text-sm text-muted-foreground">Cliente ocasional · sin datos personales.</p>}
     {draft.customerMode === 'new' && <div className="mt-4 space-y-4 rounded-xl bg-muted p-4">

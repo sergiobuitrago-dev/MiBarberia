@@ -22,7 +22,7 @@ export async function VisitHistory({ searchParams }: { searchParams: Promise<{ p
     <h1 className="page-title">Visitas</h1>
     <p className="mt-2 mb-6 text-sm text-muted-foreground">Las atenciones más recientes de tu barbería.</p>
     <Button asChild className="mb-5 h-14 w-full text-base"><Link href="/visitas/nueva">+ Nueva visita</Link></Button>
-    {data?.length ? <ul aria-label="Historial de visitas" className="divide-y rounded-2xl border bg-card">
+    {data?.length ? <ul aria-label="Historial de visitas" className="divide-y rounded-2xl bg-card">
       {data.map(visit => <li key={visit.id}>
         <Link href={`/visitas/${visit.id}`} className="block rounded-xl p-5 hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2">
           <h2 className="break-words text-lg font-semibold">{visit.customers?.name ?? 'Cliente ocasional'}</h2>

@@ -17,11 +17,12 @@ test.beforeAll(async () => {
   const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   if (error || !data.user) throw error;
   userId = data.user.id;
-  shopId = await insert('barbershops', { name: 'Historial de prueba' });
+  shopId = await insert('barbershops', { name: 'Barbería Central' });
   otherShop = await insert('barbershops', { name: 'Barbería privada' });
   await insert('barbershop_users', { barbershop_id: shopId, user_id: userId, role: 'OWNER' });
   barberId = await insert('barbers', { barbershop_id: shopId, name: 'Carlos', commission_rate: 40 });
   otherBarber = await insert('barbers', { barbershop_id: otherShop, name: 'Barbero privado', commission_rate: 40 });
+  await insert('visits', {barbershop_id:otherShop,barber_id:otherBarber,payment_method:'CASH',subtotal_amount:90000,total_amount:90000,discount_amount:0,commission_rate:40,commission_amount:36000});
   const login = await owner.auth.signInWithPassword({ email, password });
   if (login.error) throw login.error;
 });
@@ -37,6 +38,7 @@ test.afterAll(async () => {
 
 test('dashboard periods and create → void refresh on mobile', async ({ page }, info) => {
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(email);
   await page.getByLabel('Contraseña', { exact: true }).fill(password);
@@ -53,6 +55,8 @@ test('dashboard periods and create → void refresh on mobile', async ({ page },
   await page.getByRole('button',{name:'Registrar visita',exact:true}).click();
   await expect(page.getByRole('heading',{name:'Visita registrada'})).toBeVisible();
   const id=page.url().split('/').at(-2)!;
+  const persisted=await admin.from('visits').select('barber_id').eq('id',id).single();
+  expect(persisted.data?.barber_id).toBe(barberId);
   await page.getByRole('link',{name:'Inicio',exact:true}).click();
   await expect(page.getByTestId('metric-sales')).toHaveText('$45.000');
   await expect(page.getByTestId('metric-visits')).toHaveText('1');
@@ -63,13 +67,19 @@ test('dashboard periods and create → void refresh on mobile', async ({ page },
   await expect(page.getByRole('region',{name:'Top servicios'})).toContainText('Corte');
   await page.screenshot({path:info.outputPath('dashboard-actividad-390.png')});
   for(const [label,name] of [['Producción por barbero','barberos'],['Top servicios','servicios']]) {
-    await page.getByRole('region',{name:label}).scrollIntoViewIfNeeded();
+    await page.getByRole('region',{name:label}).evaluate(element=>element.scrollIntoView({block:'start',behavior:'instant'}));
     await page.screenshot({path:info.outputPath(`dashboard-${name}-390.png`)});
   }
+  expect((await admin.from('barbers').update({name:'A'.repeat(120)}).eq('id',barberId)).error).toBeNull();
+  expect((await admin.from('services').update({name:'B'.repeat(120)}).eq('id',service)).error).toBeNull();
+  await page.reload();
   for(const width of [360,390,430]) {
     await page.setViewportSize({width,height:844});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   }
+  expect((await admin.from('barbers').update({name:'Carlos'}).eq('id',barberId)).error).toBeNull();
+  expect((await admin.from('services').update({name:'Corte'}).eq('id',service)).error).toBeNull();
+  await page.reload();
   await page.setViewportSize({width:390,height:844});
   await page.getByRole('link',{name:'Esta semana',exact:true}).click();
   await expect(page.getByTestId('metric-sales')).toHaveText('$45.000');
@@ -82,6 +92,7 @@ test('dashboard periods and create → void refresh on mobile', async ({ page },
   await page.getByLabel('Fecha final').fill('2000-01-01');
   await page.getByRole('button',{name:'Aplicar periodo'}).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('La fecha final');
+  await expect(page.getByLabel('Fecha inicial')).toBeFocused();
   await page.getByLabel('Fecha inicial').fill('2000-01-01');
   await page.getByRole('button',{name:'Aplicar periodo'}).click();
   await expect(page.getByTestId('metric-sales')).toHaveText('$0');

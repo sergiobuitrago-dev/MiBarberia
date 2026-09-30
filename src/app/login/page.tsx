@@ -1,3 +1,4 @@
+import { Wordmark } from '@/components/ui/wordmark';
 import { getSupabaseEnv } from '@/lib/supabase/env';
 import { LoginForm } from '@/features/auth/login-form';
 
@@ -6,8 +7,9 @@ export const dynamic = 'force-dynamic';
 export default function LoginPage() {
   return (
     <main className="mx-auto flex min-h-svh max-w-md flex-col justify-center p-6">
-      <section className="rounded-xl border bg-card p-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Entrar a MiBarbería</h1>
+      <div className="mb-9"><Wordmark /><div aria-hidden="true" className="mt-4 h-0.5 w-10 bg-primary" /></div>
+      <section className="rounded-2xl bg-card p-6">
+        <h1 className="text-2xl font-extrabold tracking-tight">Entrar a MiBarbería</h1>
         <p className="mt-2 text-sm text-muted-foreground">Usa la cuenta de propietario que te entregó el administrador.</p>
         {getSupabaseEnv()
           ? <LoginForm />

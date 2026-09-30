@@ -18,7 +18,7 @@ export function CatalogForm({ kind, record }: { kind: CatalogKind; record?: { id
     formRef.current?.querySelector<HTMLInputElement>('[aria-invalid="true"]')?.focus();
   }, [state]);
   return (
-    <form ref={formRef} action={action} noValidate className="space-y-6 rounded-2xl border bg-card p-5 sm:p-6">
+    <form ref={formRef} action={action} noValidate className="space-y-6 rounded-2xl bg-card p-5 sm:p-6">
       {record && <input type="hidden" name="id" value={record.id} />}
       {state.message && <p role="alert" className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive">{state.message}</p>}
       <div className="space-y-2">
