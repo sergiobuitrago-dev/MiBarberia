@@ -1,0 +1,10 @@
+{
+  "read_only": true,
+  "project_ref": "oudmjgakuqgzxujuszql",
+  "settings": {
+    "auth.email.enable_confirmations": true,
+    "auth.email.enable_signup": true,
+    "auth.enable_anonymous_sign_ins": false,
+    "auth.enable_signup": false
+  }
+}

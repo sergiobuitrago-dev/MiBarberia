@@ -1,0 +1,26 @@
+{
+  "project_ref": "oudmjgakuqgzxujuszql",
+  "versions": [
+    "20260929032903",
+    "20260929033048",
+    "20260929042922",
+    "20260929132618",
+    "20260929140110",
+    "20260929194532"
+  ],
+  "schema_before_sha256": "a49964cf9d94bbfd707c208bbd4211465f6d41fdbbb783bcda05f114a0bbcf1b",
+  "schema_after_sha256": "a49964cf9d94bbfd707c208bbd4211465f6d41fdbbb783bcda05f114a0bbcf1b",
+  "changed_sections": [
+    "history"
+  ],
+  "counts": {
+    "visits": 0,
+    "customers": 0,
+    "auth_users": 0,
+    "barbershops": 0
+  },
+  "tables": 8,
+  "policies": 17,
+  "rls_all_tables": true,
+  "original_files_unchanged": true
+}
