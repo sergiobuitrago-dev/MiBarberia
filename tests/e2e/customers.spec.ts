@@ -24,6 +24,11 @@ test.afterEach(async()=>{
  await admin.from('barbershops').delete().in('id',[shopId,otherShop].filter(Boolean));
 });
 async function login(page:Page){await page.goto('/login');await page.getByLabel('Correo electrónico').fill(email);await page.getByLabel('Contraseña',{exact:true}).fill(password);await page.getByRole('button',{name:'Entrar',exact:true}).click();await expect(page.getByRole('heading',{name:'Barbería de prueba'})).toBeVisible();}
+async function openCustomers(page:Page){
+ await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('link',{name:'Más',exact:true}).click();
+ await page.getByRole('link',{name:/Clientes.*Nombres/}).click();
+ await expect(page.getByRole('heading',{name:'Clientes',exact:true})).toBeVisible();
+}
 async function capture(page:Page,name:string){
  mkdirSync('docs/screenshots/phase-5',{recursive:true});
  for(const width of [360,390,430]){
@@ -34,18 +39,18 @@ async function capture(page:Page,name:string){
 }
 test('customer lifecycle: new/occasional, search, profile, edit, repeat visit, void, mobile states and tenant protection',async({page})=>{
  test.setTimeout(120000);await page.setViewportSize({width:390,height:844});await login(page);
- await page.getByRole('link',{name:'Clientes',exact:true}).click();
+ await openCustomers(page);
  await expect(page.getByText('Aún no tienes clientes registrados.',{exact:true})).toBeVisible();await capture(page,'empty');
  await page.getByRole('link',{name:'Nueva visita',exact:true}).click();
  await page.getByRole('button',{name:'Carlos',exact:true}).click();await page.getByRole('button',{name:'Corte, $30.000',exact:true}).click();
  await page.getByRole('button',{name:'Registrar visita',exact:true}).click();await expect(page.getByRole('heading',{name:'Visita registrada'})).toBeVisible();
- await page.getByRole('link',{name:'Clientes',exact:true}).click();await expect(page.getByText('Aún no tienes clientes registrados.',{exact:true})).toBeVisible();
+ await openCustomers(page);await expect(page.getByText('Aún no tienes clientes registrados.',{exact:true})).toBeVisible();
  await page.getByRole('link',{name:'Nueva visita',exact:true}).click();
  await page.getByRole('button',{name:'+ Cliente nuevo',exact:true}).click();await page.getByLabel('Nombre del cliente').fill('Juan Pérez');await page.getByLabel('Teléfono (opcional)').fill('300 123-4567');
  await page.getByRole('button',{name:'Carlos',exact:true}).click();await page.getByRole('button',{name:'Corte, $30.000',exact:true}).click();await page.getByRole('button',{name:'Barba, $15.000',exact:true}).click();
  await page.getByRole('button',{name:'Registrar visita',exact:true}).click();await expect(page.getByRole('heading',{name:'Visita registrada'})).toBeVisible();
  const firstVisit=page.url().split('/').at(-2)!;
- await page.getByRole('link',{name:'Clientes',exact:true}).click();
+ await openCustomers(page);
  const list=page.getByRole('list',{name:'Clientes registrados'});await expect(list).toContainText('1 visita · $45.000');await capture(page,'listado');
  await page.getByLabel('Buscar nombre o teléfono').fill('JUAN');await page.getByLabel('Buscar nombre o teléfono').press('Enter');
  await expect(list).toContainText('Juan Pérez');await expect(list).not.toContainText('Juan Privado');await capture(page,'busqueda');
@@ -60,7 +65,7 @@ test('customer lifecycle: new/occasional, search, profile, edit, repeat visit, v
  await page.getByLabel('Nombre',{exact:true}).fill('Juan Pérez Editado');await page.getByLabel('Teléfono (opcional)').fill('');await page.getByRole('button',{name:'Guardar cambios'}).click();await expect(page.getByRole('heading',{name:'Juan Pérez Editado'})).toBeVisible();await expect(page.getByText('Sin teléfono',{exact:true})).toBeVisible();
  await page.goto('/visitas/nueva');await page.getByRole('button',{name:'Buscar cliente',exact:true}).click();await page.getByLabel('Buscar por nombre o teléfono').fill('Juan Pérez Editado');await page.getByRole('button',{name:/Juan Pérez Editado/}).click();await page.getByRole('button',{name:'Carlos',exact:true}).click();await page.getByRole('button',{name:'Corte, $30.000',exact:true}).click();await page.getByRole('button',{name:'Registrar visita',exact:true}).click();await expect(page.getByRole('heading',{name:'Visita registrada'})).toBeVisible();
  const secondVisit=page.url().split('/').at(-2)!;
- await page.getByRole('link',{name:'Clientes',exact:true}).click();await list.getByRole('link',{name:/Juan Pérez Editado/}).click();await expect(page.getByLabel('Resumen del cliente')).toContainText('2 visitas');await expect(page.getByLabel('Resumen del cliente')).toContainText('$75.000');
+ await openCustomers(page);await list.getByRole('link',{name:/Juan Pérez Editado/}).click();await expect(page.getByLabel('Resumen del cliente')).toContainText('2 visitas');await expect(page.getByLabel('Resumen del cliente')).toContainText('$75.000');
  await history.getByRole('link').first().click();await expect(page).toHaveURL(new RegExp(`/visitas/${secondVisit}$`));await page.getByRole('button',{name:'Anular visita',exact:true}).click();await page.getByRole('button',{name:'Anular visita',exact:true}).click();await expect(page.getByText('ANULADA',{exact:true})).toBeVisible();
  await page.goBack();await expect(page.getByLabel('Resumen del cliente')).toContainText('1 visita');await expect(page.getByLabel('Resumen del cliente')).toContainText('$45.000');await expect(history.getByRole('link')).toHaveCount(1);
  await history.getByRole('link').click();await page.getByRole('button',{name:'Anular visita',exact:true}).click();await page.getByRole('button',{name:'Anular visita',exact:true}).click();await expect(page.getByText('ANULADA',{exact:true})).toBeVisible();await page.goto(profileUrl);await expect(page.getByLabel('Resumen del cliente')).toContainText('0 visitas');await expect(page.getByLabel('Resumen del cliente')).toContainText('$0');await expect(page.getByText('Aún no tiene visitas activas.')).toBeVisible();await capture(page,'sin-visitas-activas');

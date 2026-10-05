@@ -84,3 +84,30 @@ Esta fase habilita Clientes; Fidelización permanece excluida.
 | Seguridad | requireOwner + RLS + filtros de tenant | Vista/RPC invoker; perfiles ajenos e inexistentes indistinguibles; sin nuevo permiso de escritura; zero-row update no es éxito | customers.test.mjs + customers.spec.ts |
 
 No cache persistente de Clientes: layout OWNER force-dynamic existente; consultas nuevas en navegación. Edición revalida Clientes y Visitas por el nombre actual compartido. Acciones/RPC existentes de registro/anulación permanecen intactas. Consultas de resumen e historial separadas: cambios concurrentes entre ambas pueden reflejar instantes distintos; no se promete snapshot transaccional ni realtime. Paginación offset comparte la limitación ya aceptada del historial: una nueva visita puede desplazar filas entre páginas.
+
+
+## Fase 6 — Home operacional + comisiones
+
+Actualiza el contrato anterior de Home, navegación y presentación de comisiones. La fuente
+funcional es el brief y checkpoint aprobados por el propietario el 4 de octubre de 2026.
+
+| Capacidad | Responsable | Comportamiento | Verificación |
+|---|---|---|---|
+| Home | dashboard/screen.tsx + metrics.tsx | Cuatro métricas con etiquetas y color semántico; pagos y top servicios actuales; producción en BarberProductionCard | dashboard.spec.ts + commissions.spec.ts |
+| Serie diaria | get_dashboard + dashboard/chart.ts + sales-chart.tsx | Siete días locales incluyendo hoy, independiente del selector y siempre visible; ACTIVE, ceros, fechas cronológicas; strings exactos; BigInt antes de normalizar coordenadas; SVG accesible + desglose nativo | dashboard.test.mjs + operational-presentation.test.mjs + commissions.spec.ts |
+| Semana | get_weekly_commissions + commissions/period.ts | DB calcula lunes 00:00 hasta próximo lunes exclusivo usando timezone del tenant; default esta semana; devuelve fechas anterior/siguiente; cliente valida formato de URL y presenta | commissions.test.mjs + operational-presentation.test.mjs |
+| Resumen/detalle | commissions/screens.tsx | Solo barberos con ACTIVE; inactivos con histórico incluidos; snapshot commission_amount; servicios del snapshot; 25 visitas por página con totales completos; vuelta conserva semana | commissions.test.mjs + commissions.spec.ts |
+| Seguridad | get_weekly_commissions + requireOwner | INVOKER/RLS, auth.uid OWNER y tenant derivados, sin argumento tenant; ID inexistente y ajeno idénticos; sin permisos de escritura nuevos | commissions.test.mjs + commissions.spec.ts |
+| Navegación | OwnerNavigation + CatalogMenu + MorePage | Inicio/Visitas/Comisiones/Más; Clientes y cuenta/logout en Más, rutas de Clientes activan Más; desktop conserva shell | auth.spec.ts + customers.spec.ts + commissions.spec.ts |
+| Refresh | visits/actions.ts | Crear/anular revalida el patrón /(owner)/comisiones (layout) y sus descendientes además de las rutas existentes | dashboard.spec.ts |
+| Vacío/error | screens + app/error + comisiones/not-found | Vacío semanal claro; sin visitas del barbero; página fuera de rango permite volver a primera; parámetros inválidos no muestran cifras de otra semana; backend falla con retry global | commissions.spec.ts |
+
+No se persisten cierres ni estados de pago. Anular una visita cambia también la consulta histórica.
+Se conserva la precisión COP con BigInt y strings. La semana histórica usa el nombre actual del
+barbero; los servicios y las comisiones usan snapshots. Desactivar un barbero no oculta su histórico.
+La paginación offset comparte la limitación existente: inserciones/anulaciones concurrentes pueden
+mover filas entre páginas; los totales se calculan completos dentro de cada respuesta RPC.
+
+Los extremos del calendario admitido (años 0001–9999) deshabilitan navegación fuera de rango.
+El cálculo SQL usa siempre siete días; solo la etiqueta final se acota a 9999-12-31 para que
+las fechas de presentación sigan siendo representables. No hay datos del piloto fuera de ese rango.

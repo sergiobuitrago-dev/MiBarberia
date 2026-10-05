@@ -98,6 +98,10 @@ test('dashboard periods and create → void refresh on mobile', async ({ page },
   await expect(page.getByTestId('metric-sales')).toHaveText('$0');
   await page.getByRole('link',{name:'Hoy',exact:true}).click();
   await expect(page.getByTestId('metric-sales')).toHaveText('$45.000');
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('link',{name:'Comisiones',exact:true}).click();
+  await expect(page.getByRole('article',{name:'Carlos'})).toContainText('$18.000');
+  await page.getByRole('link',{name:'Ver detalle de Carlos'}).click();
+  await expect(page.getByTestId('commission-total')).toHaveText('$18.000');
   await page.goto(`/visitas/${id}`);
   await page.getByRole('button',{name:'Anular visita',exact:true}).click();
   await page.getByRole('button',{name:'Anular visita',exact:true}).click();
@@ -106,5 +110,7 @@ test('dashboard periods and create → void refresh on mobile', async ({ page },
   for(const metric of ['sales','commissions','shop']) await expect(page.getByTestId(`metric-${metric}`)).toHaveText('$0');
   await expect(page.getByTestId('metric-visits')).toHaveText('0');
   for(const name of ['Métodos de pago','Producción por barbero','Top servicios']) await expect(page.getByRole('region',{name})).toHaveCount(0);
+  await page.getByRole('navigation',{name:'Navegación principal'}).getByRole('link',{name:'Comisiones',exact:true}).click();
+  await expect(page.getByText('No hay comisiones registradas esta semana.')).toBeVisible();
   expect(service).toBeTruthy();expect(second).toBeTruthy();
 });

@@ -29,6 +29,7 @@ export async function registerVisit(_previous: VisitState, form: FormData): Prom
     return { errors: {}, message: messages[error?.message ?? ''] ?? 'No pudimos registrar la visita. Intenta nuevamente.' };
   }
   revalidatePath('/');
+  revalidatePath('/(owner)/comisiones', 'layout');
   revalidatePath('/visitas');
   redirect(`/visitas/${data}/exito`);
 }
@@ -42,6 +43,7 @@ export async function voidVisit(id: string, _previous: { message?: string }): Pr
   const { data, error } = await supabase.rpc('void_visit', { p_visit_id: id });
   if (error || !data) return unavailable;
   revalidatePath('/');
+  revalidatePath('/(owner)/comisiones', 'layout');
   revalidatePath('/visitas');
   revalidatePath(`/visitas/${data}`);
   revalidatePath(`/visitas/${data}/exito`);

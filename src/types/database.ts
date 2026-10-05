@@ -206,6 +206,9 @@ isOneToOne: false
 "get_dashboard":
 { Args: { "p_end_date"?: string,"p_period"?: string,"p_start_date"?: string }; Returns: Json
                            },
+"get_weekly_commissions":
+{ Args: { "p_barber_id"?: string,"p_page"?: number,"p_week_date"?: string }; Returns: Json
+                           },
 "search_customers":
 { Args: { "p_page"?: number,"p_query"?: string }; Returns: Json
                            },

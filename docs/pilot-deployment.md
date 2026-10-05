@@ -1,8 +1,14 @@
 # Piloto privado: guía de despliegue
 
-**Estado:** preparación; no se ha creado infraestructura ni verificado un piloto remoto.
-Para 1–3 barberías OWNER. Orden: Supabase → migrations → Auth → Vercel → provisioning
-→ smoke test. No migrar datos de desarrollo. No requiere dominio propio ni staging.
+**Actualización del propietario — 4 de octubre de 2026:** el piloto usa Netlify conectado
+al repositorio GitHub. Un push a main dispara deployment automático y requiere aprobación
+explícita. La secuencia vigente de publicación está en la sección 12. No ejecutar deployment
+manual en Netlify. Migration 7 está preparada para validación local; su aplicación Cloud
+pertenece a una etapa posterior autorizada.
+
+El resto de esta guía conserva la preparación original (incluidas referencias históricas a
+Vercel en secciones 6–8); no implica crear infraestructura nueva ni cambiar el hosting actual.
+Para 1–3 barberías OWNER, sin migrar datos de desarrollo ni necesitar dominio propio o staging.
 
 ## 1. Crear Supabase Cloud
 
@@ -182,18 +188,26 @@ IDs técnicos registrados, con revisión explícita; sin TRUNCATE, reset ni borr
 No entregar acceso real hasta aprobar estas comprobaciones y confirmar que no quedan
 fixtures técnicos. No se incluye en esta fase ningún ejecutor remoto destructivo.
 
-## 12. Futuras versiones y redeployment
+## 12. Flujo vigente: Supabase Cloud → GitHub → Netlify
 
-1. Desarrollar y probar localmente. Revisar diff y secretos, aprobar un commit.
-2. Si hay nuevas migraciones, revisar compatibilidad con la app desplegada, respaldo
-   y posibilidad de recuperación antes de ejecutarlas. Dry-run remoto, aplicar solo
-   pendientes y comprobar historial; nunca editar migraciones ya aplicadas.
-3. Desplegar el commit aprobado mediante Vercel y repetir el smoke. Si conectas Git,
-   recordar que los pushes a la rama de producción pueden desplegar automáticamente;
-   no usar esa rama para trabajo sin aprobar.
-4. Para repetir sin cambios, usar Redeploy en el deployment aprobado. Verificar variables.
-5. Ante regresión, restaurar una versión de app compatible desde Vercel. Esto **no**
-   revierte schema/datos; no improvisar migraciones inversas ni usar reset.
+Implementar y validar primero en local: lint, typecheck, tests, build y revisión mobile.
+No hacer commit ni push durante la etapa local. Los cambios aprobados quedan revisables.
+
+Cuando el propietario autorice publicar, seguir este orden:
+
+1. Aplicar Migration 7 a Supabase Cloud por el flujo normal. Verificar proyecto vinculado;
+   el dry-run debe listar solo `20261005012235_home_weekly_commissions.sql`. No repair,
+   include-all, seed ni cambios manuales a supabase_migrations.
+2. Verificar migration history y RPCs; conservar las seis versiones anteriores.
+3. Hacer commit del código aprobado.
+4. Hacer push a la rama de producción, main, **solo con aprobación explícita del propietario**.
+5. Netlify realiza el deployment automáticamente desde GitHub; no disparar otro manual.
+6. Verificar el resultado del build/deployment y que corresponde al commit aprobado.
+7. Ejecutar smoke test en la URL pública: login OWNER, Home/periodos/gráfica,
+   Comisiones/semana/detalle y navegación. No modificar datos reales como parte del smoke.
+
+Ante un fallo, detener la publicación y revisar la causa. No reparar historial ni revertir
+schema/datos improvisadamente. No usar pushes de prueba a producción.
 
 ## Si falla login
 

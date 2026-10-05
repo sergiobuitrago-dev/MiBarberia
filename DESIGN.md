@@ -12,10 +12,10 @@ Dorado sólido solo para acciones principales. Selección: fondo primary/10, bor
 Arial/Helvetica del sistema, sin descargas externas. Se mantiene por alcance; no es una elección definitiva de marca. Títulos 30px extra-bold con tracking ajustado; cuerpo 16px; etiquetas y ayudas 14px; contexto 12px. Números tabulares para precios y comisiones.
 
 ## Layout
-Una columna de máximo 36rem, padding horizontal 20px. Formularios de dos campos en páginas dedicadas. Navegación inferior Inicio/Visitas/Más con espacio para safe-area y padding inferior del contenido. Catálogos con máximo 20 registros por página; historial de visitas con 25.
+Una columna de máximo 36rem, padding horizontal 20px. Formularios de dos campos en páginas dedicadas. Navegación inferior Inicio/Visitas/Comisiones/Más (Clientes dentro de Más) con espacio para safe-area y padding inferior del contenido. Catálogos con máximo 20 registros por página; historial de visitas con 25.
 
 ## Elevation & Depth
-Jerarquía por background → card → surface-elevated. Bordes solo para controles, selección y separadores útiles. Dashboard con un panel principal sin borde y listas abiertas; sin cuadrícula de cards ni sombras decorativas.
+Jerarquía por background → card → surface-elevated. Bordes solo para controles, selección y separadores útiles. Dashboard con cuatro cards de métricas y cards compactas de producción, sin bordes ni sombras decorativas; pagos y servicios conservan listas abiertas.
 
 ## Shapes
 Contenedores 16px de radio, botones 8px. Controles de al menos 44px de alto. Scrollbar visible y gutter estable.
@@ -49,3 +49,34 @@ Wordmark compartido: Mi blanco roto y Barbería dorado. Button selected diferenc
 Se conserva la identidad carbón/dorado aprobada. OwnerNavigation añade Clientes: Inicio/Visitas/Clientes/Más, con las mismas áreas táctiles y safe-area. Listado compacto de 25 filas con nombre, teléfono y visitas/gasto; sin tabla móvil. Perfil con resumen en una sola superficie e historial separado, extensible con un bloque futuro sin placeholders de Fidelización. Edición en página dedicada de dos campos, reutilizando Button/Input y el patrón de catálogo.
 
 Búsqueda explícita mediante Buscar/Enter (sin peticiones por tecla); limpiar restaura el listado y conserva foco. Durante la consulta el campo permanece enfocable y de solo lectura para evitar que una respuesta anterior sustituya una entrada nueva. URL conserva búsqueda/página; nueva búsqueda reinicia página 1. Sin nuevas fuentes, colores, dependencias ni ajustes visuales en Dashboard/Visitas.
+
+
+## Fase 6 — Home operacional y comisiones semanales
+
+Sustituye las reglas visuales anteriores de Dashboard y navegación. Las secciones históricas
+anteriores describen cada entrega; esta sección define la experiencia vigente.
+
+Cuatro cards en dos columnas: Ventas (con N visitas), Visitas, Comisiones y Para barbería.
+Importes largos ocupan dos columnas; nunca se truncan. Cifras de ventas/producción en success,
+comisiones en destructive y para barbería en primary. Visitas neutral. Superficies oscuras,
+sin gradientes, glow, sombras nuevas ni colores asignados a barberos. El significado siempre
+se expresa también mediante etiquetas. No se habla de utilidad ni de ganancia neta.
+
+Orden: encabezado, periodo, Nueva visita, métricas, Ventas — últimos 7 días, métodos de pago,
+producción por barbero y Top servicios. Una sola gráfica SVG de línea con escala desde cero,
+siete fechas cronológicas incluyendo hoy, día de semana y día del mes. Máximo diario en COP,
+valores exactos accesibles y disclosure nativo con desglose diario operable por teclado.
+Es independiente del periodo; siete ceros mantienen línea/etiquetas y mensaje claro.
+
+BarberProductionCard es canónico para Home y Comisiones; muestra nombre, visitas, producción
+y comisión. Variante semanal añade Ver detalle. Detalle en página dedicada, sin edición,
+con totales completos y lista de visitas paginada. Navegación de semana anterior/actual/siguiente
+con áreas táctiles de 44px. Rango incluye año para desambiguar consultas históricas.
+
+OwnerNavigation conserva cuatro entradas: Inicio/Visitas/Comisiones/Más. Clientes es la primera
+entrada de Más; su ruta mantiene Más activo. Cuenta y logout viven al final de Más. Se conserva
+la barra inferior y el ancho máximo 36rem también en desktop.
+
+Tokens: globals.css es la fuente runtime canónica; sus variables :root alimentan @theme inline
+y las utilidades Tailwind de todos los componentes. Este documento refleja esos valores;
+no genera CSS. Fase 6 no modifica ningún token ni añade dependencias.

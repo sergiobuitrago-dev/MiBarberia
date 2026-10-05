@@ -93,4 +93,37 @@ test('aggregate COP amounts remain exact above the JavaScript safe integer limit
   assert.equal(data.totals.sales,'18014398509511982');
   assert.equal(data.payments[0].amount,'18014398509511982');
   assert.equal(data.barbers[0].production,'18014398509511982');
+  assert.equal(data.daily_sales.at(-1).sales,'18014398509511982');
+});
+
+test('seven local calendar days include zeros, exclude VOIDED and are independent of period', async () => {
+  const { today, first, tomorrow } = (await db.query(`select
+    (statement_timestamp() at time zone 'America/Bogota')::date::text today,
+    ((statement_timestamp() at time zone 'America/Bogota')::date-6)::text first,
+    ((statement_timestamp() at time zone 'America/Bogota')::date+1)::text tomorrow`)).rows[0];
+  await db.query('update public.visits set visited_at=$1::date::timestamp at time zone \'America/Bogota\' where id=$2', [first,f.a.visit]);
+  await asUser(db,f.users.a);
+  const data = await dashboard('custom','2000-01-01','2000-01-01');
+  assert.equal(data.totals.sales,'0');
+  assert.equal(data.daily_sales?.length,7);
+  assert.deepEqual(data.daily_sales[0],{date:first,sales:'30000'});
+  assert.deepEqual(data.daily_sales[6],{date:today,sales:'0'});
+  assert.ok(data.daily_sales.slice(1).every(d=>d.sales==='0'));
+  for(const period of ['today','week','month']) assert.deepEqual((await dashboard(period)).daily_sales,data.daily_sales);
+  // Bogotá midnight, not UTC midnight; include the last microsecond of today.
+  for(const [expression,want] of [
+    ["$1::date::timestamp at time zone 'America/Bogota'",'0'],
+    ["($1::date::timestamp at time zone 'America/Bogota') - interval '1 microsecond'",'30000'],
+  ]) {
+    await db.query('reset role');
+    await db.query(`update public.visits set visited_at=${expression} where id=$2`,[tomorrow,f.a.visit]);
+    await asUser(db,f.users.a);
+    assert.equal((await dashboard()).daily_sales[6].sales,want);
+  }
+  await db.query('select public.void_visit($1)',[f.a.visit]);
+  assert.ok((await dashboard()).daily_sales.every(d=>d.sales==='0'));
+  await db.query('reset role');
+  await db.query("update public.visits set status='ACTIVE', voided_at=null, visited_at=($1::date::timestamp at time zone 'America/Bogota')-interval '1 microsecond' where id=$2",[first,f.a.visit]);
+  await asUser(db,f.users.a);
+  assert.ok((await dashboard()).daily_sales.every(d=>d.sales==='0'));
 });

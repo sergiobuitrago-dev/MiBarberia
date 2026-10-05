@@ -72,10 +72,11 @@ test('OWNER A signs in on mobile, sees only A, persists session and signs out', 
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page.getByRole('heading', { name: `Prueba a ${label}` })).toBeVisible();
   await expect(page.getByText(`Prueba b ${label}`)).toHaveCount(0);
-  await expect(page.getByText('Acceso de propietario verificado')).toBeVisible();
   await page.reload();
   await expect(page.getByRole('heading', { name: `Prueba a ${label}` })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByRole('link', { name: 'Más', exact: true }).click();
+  await expect(page.getByText(users.a.email, { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Cerrar sesión' }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.goto('/');
